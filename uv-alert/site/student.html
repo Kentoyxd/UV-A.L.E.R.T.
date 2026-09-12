@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <title>UV-A.L.E.R.T. — Student</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/student.css" />
+    <link rel="manifest" href="manifest.json" />
+    <link rel="icon" href="icons/favicon-32.png" />
+    <meta name="theme-color" content="#0f7a3d" />
+  </head>
+  <body>
+    <!-- ---------- LOGIN ---------- -->
+    <section id="loginScreen" class="login-screen">
+      <div class="login-mark">UV</div>
+      <h1 class="login-title">UV-A.L.E.R.T.</h1>
+      <p class="login-desc">
+        Automated Location &amp; Emergency Tracker. Sign in with your school
+        Microsoft 365 account to send an emergency alert.
+      </p>
+      <button id="msLoginBtn" class="ms-login-btn">
+        <svg width="18" height="18" viewBox="0 0 21 21">
+          <rect width="9" height="9" fill="#f25022" />
+          <rect x="11" width="9" height="9" fill="#7fba00" />
+          <rect y="11" width="9" height="9" fill="#00a4ef" />
+          <rect x="11" y="11" width="9" height="9" fill="#ffb900" />
+        </svg>
+        Sign in with Microsoft 365
+      </button>
+      <p class="login-note">
+        You only need to sign in once. Your account is used only to identify you
+        to campus security during an emergency.
+      </p>
+      <p id="loginError" class="login-error"></p>
+    </section>
+
+    <!-- ---------- MAIN APP (building + emergency picker) ---------- -->
+    <section id="appScreen" class="app" hidden>
+      <header class="topbar">
+        <div class="brand">
+          <div class="brand-mark">UV</div>
+          <div>
+            <div class="brand-name">UV-A.L.E.R.T.</div>
+            <div class="brand-sub">Student portal</div>
+          </div>
+        </div>
+        <div class="identity">
+          <span><strong id="studentName">—</strong></span>
+          <button id="signOutBtn" class="link-btn">Sign out</button>
+        </div>
+      </header>
+
+      <div class="wizard">
+        <div class="step">
+          <div class="step-title">Which building are you in?</div>
+          <div
+            id="buildingGrid"
+            class="tile-grid"
+            role="group"
+            aria-label="Building"
+          ></div>
+        </div>
+
+        <div class="step">
+          <div class="step-title">What's the emergency?</div>
+          <div
+            id="emergencyGrid"
+            class="tile-grid"
+            role="group"
+            aria-label="Emergency type"
+          ></div>
+        </div>
+
+        <div class="step">
+          <button
+            id="detailsToggle"
+            class="details-toggle"
+            type="button"
+            aria-expanded="false"
+          >
+            + Add specific details (optional)
+          </button>
+          <div id="detailsBox" class="details-box" hidden>
+            <textarea
+              id="detailsInput"
+              maxlength="200"
+              placeholder="e.g. Room 214, 3rd floor near the east stairwell"
+            ></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="action-bar">
+        <div class="action-bar-inner">
+          <div id="selectionSummary" class="selection-summary">
+            Choose a building and an emergency type to continue.
+          </div>
+          <button
+            id="sendBtn"
+            class="btn btn-primary btn-block send-btn"
+            disabled
+          >
+            Send alert
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- ALERT SENT / ACTIVE ---------- -->
+    <section id="sentScreen" class="sent-screen" hidden>
+      <div class="pulse-dot">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path
+            d="M12 2L2 22h20L12 2z"
+            stroke="#fff"
+            stroke-width="1.6"
+            stroke-linejoin="round"
+          />
+          <path
+            d="M12 9v5"
+            stroke="#fff"
+            stroke-width="1.8"
+            stroke-linecap="round"
+          />
+          <circle cx="12" cy="17" r="1" fill="#fff" />
+        </svg>
+      </div>
+      <h2 class="sent-title">Alert sent</h2>
+      <p class="sent-desc">
+        Campus security has been notified and can see your building, floor and
+        emergency type. Stay where it's safe if you can.
+      </p>
+      <div class="sent-summary">
+        <div>
+          <span class="label">Building:</span> <span id="sentBuilding">—</span>
+        </div>
+        <div>
+          <span class="label">Emergency:</span> <span id="sentType">—</span>
+        </div>
+        <div id="sentNoteRow">
+          <span class="label">Details:</span> <span id="sentNote">—</span>
+        </div>
+        <div><span class="label">Sent:</span> <span id="sentTime">—</span></div>
+      </div>
+      <button id="safeBtn" class="safe-btn">
+        I'm safe now — cancel this alert
+      </button>
+    </section>
+
+    <!-- Vendor libraries — bundled locally, no CDN calls at runtime -->
+    <script src="js/lib/firebase-app-compat.js"></script>
+    <script src="js/lib/firebase-auth-compat.js"></script>
+    <script src="js/lib/firebase-firestore-compat.js"></script>
+    <script src="js/lib/firebase-database-compat.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/student.js"></script>
+  </body>
+</html>

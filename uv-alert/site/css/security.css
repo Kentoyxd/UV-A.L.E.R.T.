@@ -1,0 +1,156 @@
+/* ============================================================
+   UV-A.L.E.R.T. — security dashboard
+   ============================================================ */
+
+.dash-body {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 22px 20px 60px;
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+}
+
+/* --- Stat strip --- */
+.stat-strip {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.stat {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--line-strong);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+}
+
+.stat .num { font-size: 26px; font-weight: 700; line-height: 1.1; }
+.stat .lbl { font-size: 12.5px; color: var(--ink-faint); margin-top: 4px; }
+
+.stat.active   { border-left-color: var(--red); }
+.stat.active .num { color: var(--red-ink); }
+.stat.ack      { border-left-color: var(--amber); }
+.stat.ack .num { color: var(--amber); }
+.stat.resolved { border-left-color: var(--uv-green-600); }
+.stat.resolved .num { color: var(--uv-green-800); }
+
+/* --- Queue --- */
+.section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.section-head h2 { font-size: 17px; }
+
+.tabs { display: flex; gap: 6px; }
+
+.tab {
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+.tab.active { background: var(--uv-green-700); border-color: var(--uv-green-700); color: #fff; }
+
+.queue { display: flex; flex-direction: column; gap: 10px; }
+
+.queue-empty {
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius-md);
+  padding: 32px 20px;
+  text-align: center;
+  color: var(--ink-faint);
+  font-size: 14px;
+}
+
+.alert-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.alert-card.is-active { border-color: var(--red); background: var(--red-100); }
+.alert-card.is-resolved { opacity: 0.62; }
+
+.alert-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.alert-title { font-weight: 700; font-size: 15px; }
+.alert-meta { font-size: 13px; color: var(--ink-soft); margin-top: 2px; }
+.alert-time { font-size: 12px; color: var(--ink-faint); white-space: nowrap; }
+.alert-details { font-size: 13.5px; color: var(--ink-soft); line-height: 1.4; }
+
+.alert-actions { display: flex; gap: 8px; margin-top: 4px; }
+
+.alert-actions .chip-btn { padding: 8px 14px; font-size: 13px; }
+.ack-btn { border-color: var(--amber); color: var(--amber); }
+.resolve-btn { border-color: var(--uv-green-600); color: var(--uv-green-800); }
+
+/* --- ESP hardware panel --- */
+.esp-panel {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  padding: 4px 16px 16px;
+}
+
+.esp-panel summary {
+  cursor: pointer;
+  padding: 14px 0;
+  font-weight: 700;
+  font-size: 14.5px;
+  list-style: none;
+}
+.esp-panel summary::-webkit-details-marker { display: none; }
+.esp-panel summary::before { content: "+ "; color: var(--uv-green-700); }
+.esp-panel[open] summary::before { content: "\2212 "; }
+
+.hw-note {
+  font-size: 13px;
+  color: var(--ink-faint);
+  line-height: 1.5;
+  margin-bottom: 14px;
+}
+
+.esp-row { display: flex; gap: 8px; margin-bottom: 10px; }
+
+.esp-row input {
+  flex: 1;
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--ink);
+  background: var(--paper);
+}
+.esp-row input:focus { border-color: var(--uv-green-600); }
+
+.esp-status {
+  font-size: 13px;
+  color: var(--ink-faint);
+  margin-top: 2px;
+}
+.esp-status.ok { color: var(--uv-green-700); }
+.esp-status.err { color: var(--red-ink); }
+
+@media (max-width: 480px) {
+  .stat-strip { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .stat { padding: 10px 10px; }
+  .stat .num { font-size: 21px; }
+}

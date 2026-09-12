@@ -1,0 +1,316 @@
+/* ============================================================
+   UV-A.L.E.R.T. — shared tokens & base
+   Palette: University of the Visayas green & white.
+   Principle: calm green/white baseline; red is reserved for a
+   genuinely live alarm, never used decoratively.
+   ============================================================ */
+
+:root {
+  /* --- Brand --- */
+  --uv-green-900: #0b2e1d;
+  --uv-green-800: #0f3d26;
+  --uv-green-700: #166534;
+  --uv-green-600: #1c7a3f;
+  --uv-green-500: #269150;
+  --uv-green-100: #e6f2ea;
+  --uv-green-050: #f2f8f4;
+
+  /* --- Neutrals --- */
+  --paper: #f8faf8;
+  --surface: #ffffff;
+  --ink: #12241a;
+  --ink-soft: #4c5c53;
+  --ink-faint: #7c897f;
+  --line: #dbe7dd;
+  --line-strong: #b9cebf;
+
+  /* --- Signal (used sparingly, only for real states) --- */
+  --red: #b3271e;
+  --red-ink: #7a1b15;
+  --red-100: #fbe9e7;
+  --amber: #9a6b06;
+  --amber-100: #fbf1dd;
+
+  /* --- Shape / rhythm --- */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --gap: 16px;
+
+  --font: -apple-system, "Segoe UI", system-ui, Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font);
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+h1, h2, h3 { margin: 0; font-weight: 700; letter-spacing: -0.015em; }
+p { margin: 0; }
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+a { color: var(--uv-green-700); }
+
+::selection { background: var(--uv-green-100); color: var(--uv-green-900); }
+
+:focus-visible {
+  outline: 2px solid var(--uv-green-600);
+  outline-offset: 2px;
+}
+
+[hidden] { display: none !important; }
+
+/* ---------------------------------------------------------------
+   Login screen — shared by student & security
+   --------------------------------------------------------------- */
+.login-screen {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 24px;
+  text-align: center;
+  gap: 6px;
+  background:
+    radial-gradient(circle at 18% -10%, var(--uv-green-100) 0%, transparent 55%),
+    var(--paper);
+}
+
+.login-mark {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-md);
+  background: var(--uv-green-700);
+  color: #fff;
+  font-size: 22px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 18px;
+  letter-spacing: 0;
+}
+
+.login-title {
+  font-size: 26px;
+  margin-bottom: 10px;
+}
+
+.login-desc {
+  max-width: 360px;
+  color: var(--ink-soft);
+  font-size: 15px;
+  line-height: 1.5;
+  margin-bottom: 28px;
+}
+
+.login-note {
+  max-width: 340px;
+  color: var(--ink-faint);
+  font-size: 13px;
+  line-height: 1.5;
+  margin-top: 16px;
+}
+
+.ms-login-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 600;
+  padding: 13px 22px;
+  border-radius: var(--radius-sm);
+  transition: border-color 120ms ease, background 120ms ease;
+}
+
+.ms-login-btn:hover { border-color: var(--uv-green-600); background: var(--uv-green-050); }
+.ms-login-btn:disabled { opacity: 0.6; cursor: progress; }
+
+.login-error {
+  min-height: 20px;
+  color: var(--red-ink);
+  font-size: 14px;
+  margin-top: 16px;
+  max-width: 340px;
+}
+
+/* ---------------------------------------------------------------
+   Top bar — shared by both dashboards
+   --------------------------------------------------------------- */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.brand { display: flex; align-items: center; gap: 12px; }
+
+.brand-mark {
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-sm);
+  background: var(--uv-green-700);
+  color: #fff;
+  font-weight: 700;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.brand-name { font-weight: 700; font-size: 15px; line-height: 1.2; }
+.brand-sub { font-size: 12.5px; color: var(--ink-faint); line-height: 1.2; }
+
+.identity {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+
+.link-btn {
+  background: none;
+  border: none;
+  color: var(--uv-green-700);
+  font-size: 13.5px;
+  font-weight: 600;
+  padding: 4px 0;
+}
+.link-btn:hover { text-decoration: underline; }
+
+/* ---------------------------------------------------------------
+   Buttons
+   --------------------------------------------------------------- */
+.btn {
+  border: none;
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  font-size: 15px;
+  padding: 14px 20px;
+  transition: transform 80ms ease, background 120ms ease, opacity 120ms ease;
+}
+.btn:active { transform: scale(0.98); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+
+.btn-primary { background: var(--uv-green-700); color: #fff; }
+.btn-primary:not(:disabled):hover { background: var(--uv-green-800); }
+
+.btn-block { width: 100%; }
+
+.chip-btn {
+  background: var(--surface);
+  border: 1.5px solid var(--line-strong);
+  color: var(--ink);
+  border-radius: var(--radius-sm);
+  padding: 10px 16px;
+  font-weight: 600;
+  font-size: 14px;
+}
+.chip-btn:hover { background: var(--uv-green-050); }
+
+/* ---------------------------------------------------------------
+   Selectable tiles (buildings, emergency types)
+   --------------------------------------------------------------- */
+.tile-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.tile {
+  text-align: left;
+  background: var(--surface);
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: 14px 14px;
+  font-family: inherit;
+  color: var(--ink);
+  transition: border-color 120ms ease, background 120ms ease;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.tile-label { font-weight: 700; font-size: 14.5px; line-height: 1.3; }
+.tile-hint { font-size: 12px; color: var(--ink-faint); line-height: 1.35; }
+
+.tile:hover { border-color: var(--uv-green-500); }
+
+.tile.selected {
+  border-color: var(--uv-green-700);
+  background: var(--uv-green-050);
+}
+.tile.selected .tile-label { color: var(--uv-green-800); }
+
+.tile.emergency.selected {
+  border-color: var(--red);
+  background: var(--red-100);
+}
+.tile.emergency.selected .tile-label { color: var(--red-ink); }
+
+/* ---------------------------------------------------------------
+   Status pills
+   --------------------------------------------------------------- */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 10px 3px 8px;
+  border-radius: 999px;
+  line-height: 1.6;
+}
+.status-pill::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.status-pill.active   { background: var(--red-100);   color: var(--red-ink); }
+.status-pill.acked    { background: var(--amber-100); color: var(--amber); }
+.status-pill.resolved { background: var(--uv-green-100); color: var(--uv-green-800); }
+
+/* ---------------------------------------------------------------
+   Small helpers
+   --------------------------------------------------------------- */
+.visually-hidden {
+  position: absolute;
+  width: 1px; height: 1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition-duration: 0.001ms !important; animation-duration: 0.001ms !important; }
+}

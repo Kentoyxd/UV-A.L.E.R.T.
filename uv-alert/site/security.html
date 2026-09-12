@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>UV-A.L.E.R.T. — Security</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/security.css" />
+    <link rel="manifest" href="manifest.json" />
+    <link rel="icon" href="icons/favicon-32.png" />
+    <meta name="theme-color" content="#0f7a3d" />
+  </head>
+  <body>
+    <!-- ---------- LOGIN ---------- -->
+    <section id="loginScreen" class="login-screen">
+      <div class="login-mark">UV</div>
+      <h1 class="login-title">Security dashboard</h1>
+      <p class="login-desc">
+        Sign in with your staff Microsoft 365 account to view and respond to
+        campus alerts.
+      </p>
+      <button id="msLoginBtn" class="ms-login-btn">
+        <svg width="18" height="18" viewBox="0 0 21 21">
+          <rect width="9" height="9" fill="#f25022" />
+          <rect x="11" width="9" height="9" fill="#7fba00" />
+          <rect y="11" width="9" height="9" fill="#00a4ef" />
+          <rect x="11" y="11" width="9" height="9" fill="#ffb900" />
+        </svg>
+        Sign in with Microsoft 365
+      </button>
+      <p id="loginError" class="login-error"></p>
+    </section>
+
+    <!-- ---------- DASHBOARD ---------- -->
+    <section id="dashScreen" class="dash" hidden>
+      <header class="topbar">
+        <div class="brand">
+          <div class="brand-mark">UV</div>
+          <div>
+            <div class="brand-name">UV-A.L.E.R.T.</div>
+            <div class="brand-sub">Security dashboard</div>
+          </div>
+        </div>
+        <div class="identity">
+          <span><strong id="staffName">—</strong></span>
+          <button id="signOutBtn" class="link-btn">Sign out</button>
+        </div>
+      </header>
+
+      <div class="dash-body">
+        <div class="stat-strip">
+          <div class="stat active">
+            <div id="statActive" class="num">0</div>
+            <div class="lbl">Active</div>
+          </div>
+          <div class="stat ack">
+            <div id="statAck" class="num">0</div>
+            <div class="lbl">Acknowledged</div>
+          </div>
+          <div class="stat resolved">
+            <div id="statResolved" class="num">0</div>
+            <div class="lbl">Resolved today</div>
+          </div>
+        </div>
+
+        <div>
+          <div class="section-head">
+            <h2>Alert queue</h2>
+            <div class="tabs">
+              <button class="tab active" data-filter="open">Open</button>
+              <button class="tab" data-filter="all">All</button>
+            </div>
+          </div>
+          <div id="queue" class="queue" style="margin-top: 12px"></div>
+        </div>
+
+        <details class="esp-panel">
+          <summary>Alarm hardware — manual controls</summary>
+          <p class="hw-note">
+            The ESP32 automatically triggers when a new alert comes in (it polls
+            Firebase over Wi-Fi). Use these controls to test the hardware
+            directly or override it on-site.
+          </p>
+          <div class="esp-row">
+            <input
+              type="text"
+              id="espIp"
+              placeholder="ESP32 IP address, e.g. 192.168.1.9:8080"
+            />
+          </div>
+          <div class="esp-row">
+            <button
+              id="espTrigger"
+              class="chip-btn"
+              style="border-color: var(--red); color: var(--red)"
+            >
+              Trigger alarm
+            </button>
+            <button
+              id="espSilence"
+              class="chip-btn"
+              style="
+                border-color: var(--uv-green-600);
+                color: var(--uv-green-700);
+              "
+            >
+              Silence alarm
+            </button>
+          </div>
+          <div class="esp-row">
+            <input
+              type="text"
+              id="espMsg"
+              maxlength="20"
+              placeholder="Custom OLED message"
+            />
+            <button id="espSend" class="chip-btn">Send to OLED</button>
+          </div>
+          <div id="espStatus" class="esp-status">Ready</div>
+        </details>
+      </div>
+    </section>
+
+    <!-- Vendor libraries — bundled locally, no CDN calls at runtime -->
+    <script src="js/lib/firebase-app-compat.js"></script>
+    <script src="js/lib/firebase-auth-compat.js"></script>
+    <script src="js/lib/firebase-firestore-compat.js"></script>
+    <script src="js/lib/firebase-database-compat.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/security.js"></script>
+  </body>
+</html>
