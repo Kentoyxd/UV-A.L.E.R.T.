@@ -21,7 +21,7 @@ cd uv-alert\site
 python3 -m http.server 5500
 # or: npx serve -l 5500
 ```
-
+https://uv-main-alert.web.app
 Then open `http://localhost:5500/student.html` and `http://localhost:5500/security.html`.
 
 ## One-time setup before login will work

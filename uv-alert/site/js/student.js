@@ -141,10 +141,13 @@
       activeAlertId = docRef.id;
 
       // Drive the physical alarm — the ESP32 polls this node (web_server.h).
+      // "building" is included so the board's LCD can show it and the
+      // RGB LED can pick that building's color.
       await UVAuth.rtdb.ref("alarm").set({
         active: true,
         alertId: docRef.id,
         message: selectedType.id.toUpperCase(),
+        building: selectedBuilding,
       });
 
       showSentScreen(selectedBuilding, selectedType.label, details);
@@ -229,7 +232,7 @@
         // Keep the same alertId here — the ESP32 only turns the buzzer off
         // when alertId still matches the one it's currently reacting to
         // (see web_server.h). Clearing it to "" would break that match.
-        await UVAuth.rtdb.ref("alarm").set({ active: false, alertId: activeAlertId, message: "SYSTEM IDLE" });
+        await UVAuth.rtdb.ref("alarm").set({ active: false, alertId: activeAlertId, message: "SYSTEM IDLE", building: "" });
       }
 
       resetToHome();

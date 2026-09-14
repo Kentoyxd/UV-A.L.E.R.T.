@@ -7,9 +7,13 @@
 extern WebServer server;
 extern bool alarmActive;
 extern String customMessage;
+extern String currentBuilding;
 extern const int buzzerPin;
-extern const int ledPin;
-void updateScreen(const String &line1, const String &line2);
+
+void updateScreen(const String &line1, const String &line2, const String &line3 = "", const String &line4 = "");
+void setRGB(uint8_t r, uint8_t g, uint8_t b);
+void ledOff();
+void setRGBForBuilding(const String &building);
 
 // ============================================================
 // Fill this in with your Firebase Realtime Database URL, e.g.
@@ -17,7 +21,7 @@ void updateScreen(const String &line1, const String &line2);
 // (Project settings > Realtime Database, same value as
 // databaseURL in js/config.js on the web app.)
 // ============================================================
-static const char *FIREBASE_DB_URL = "PASTE_ME";
+static const char *FIREBASE_DB_URL = "https://uv-main-alert-default-rtdb.asia-southeast1.firebasedatabase.app/";
 
 // How often the board checks Firebase for a new alert, in ms.
 static const unsigned long FIREBASE_POLL_INTERVAL = 2000;
@@ -47,6 +51,7 @@ inline void handleAlarmOn()
   setCorsHeaders();
   alarmActive = true;
   customMessage = "!UV-ALERT!";
+  currentBuilding = ""; // manual trigger has no building context
   server.send(200, "text/plain", "Alarm Triggered");
 }
 
@@ -55,9 +60,10 @@ inline void handleAlarmOff()
   setCorsHeaders();
   alarmActive = false;
   digitalWrite(buzzerPin, LOW);
-  digitalWrite(ledPin, LOW);
+  ledOff();
   customMessage = "SYSTEM IDLE";
-  updateScreen("Connected to Wi-Fi", customMessage);
+  currentBuilding = "";
+  updateScreen("Connected to Wi-Fi", customMessage, "", "");
   server.send(200, "text/plain", "Alarm Silenced");
 }
 
@@ -69,8 +75,9 @@ inline void handleSetMessage()
     customMessage = server.arg("msg");
     alarmActive = false;
     digitalWrite(buzzerPin, LOW);
-    digitalWrite(ledPin, LOW);
-    updateScreen("Message Received", customMessage);
+    ledOff();
+    currentBuilding = "";
+    updateScreen("Message Received", customMessage, "", "");
     server.send(200, "text/plain", "Message Displayed");
   }
   else
@@ -124,18 +131,20 @@ inline void pollFirebaseAlarm()
   if (code == 200)
   {
     String payload = https.getString();
-    StaticJsonDocument<256> doc;
+    StaticJsonDocument<384> doc; // bumped from 256 to fit the added "building" field
     if (deserializeJson(doc, payload) == DeserializationError::Ok && !doc.isNull())
     {
       bool active = doc["active"] | false;
       String alertId = doc["alertId"] | "";
       String message = doc["message"] | "!UV-ALERT!";
+      String building = doc["building"] | "";
 
       if (active && alertId != lastHandledAlertId)
       {
         // New alert we haven't reacted to yet.
         alarmActive = true;
         customMessage = message;
+        currentBuilding = building;
         lastHandledAlertId = alertId;
       }
       else if (!active && alarmActive && alertId == lastHandledAlertId)
@@ -143,9 +152,10 @@ inline void pollFirebaseAlarm()
         // Security (or the student) resolved the alert this board was reacting to.
         alarmActive = false;
         digitalWrite(buzzerPin, LOW);
-        digitalWrite(ledPin, LOW);
+        ledOff();
         customMessage = "SYSTEM IDLE";
-        updateScreen("Connected to Wi-Fi", customMessage);
+        currentBuilding = "";
+        updateScreen("Connected to Wi-Fi", customMessage, "", "");
         lastHandledAlertId = "";
       }
     }
