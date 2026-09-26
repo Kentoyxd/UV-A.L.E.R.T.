@@ -30,6 +30,112 @@
   let allAlerts = [];
   let unsubscribe = null;
 
+  // ---------- browser alarm (sound + vibration) ----------
+  let audioCtx = null;
+  let sirenOsc = null;
+  let sirenGain = null;
+  let sirenInterval = null;
+  let vibrateInterval = null;
+  let isAlarming = false;
+  let sawFirstSnapshot = false;
+  const seenActiveIds = new Set();
+
+  const silenceBtn = document.getElementById("silenceBtn");
+  silenceBtn.addEventListener("click", stopBrowserAlarm);
+
+  function ensureAudioContext() {
+    if (!audioCtx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      audioCtx = new AC();
+    }
+    if (audioCtx.state === "suspended") audioCtx.resume();
+    return audioCtx;
+  }
+
+  function startBrowserAlarm() {
+    if (isAlarming) return;
+    isAlarming = true;
+    silenceBtn.hidden = false;
+
+    try {
+      const ctx = ensureAudioContext();
+      sirenGain = ctx.createGain();
+      sirenGain.gain.value = 0.15; // keep it from being painfully loud
+      sirenGain.connect(ctx.destination);
+      sirenOsc = ctx.createOscillator();
+      sirenOsc.type = "sine";
+      sirenOsc.connect(sirenGain);
+      sirenOsc.start();
+
+      // Two-tone wail, alternating every 500ms.
+      let high = true;
+      sirenOsc.frequency.setValueAtTime(880, ctx.currentTime);
+      sirenInterval = setInterval(() => {
+        high = !high;
+        sirenOsc.frequency.setTargetAtTime(high ? 880 : 660, ctx.currentTime, 0.05);
+      }, 500);
+    } catch (err) {
+      console.error("Couldn't start audio alarm:", err);
+    }
+
+    // Vibration — Android Chrome/Edge only. No-op (silently) on iOS Safari.
+    if (navigator.vibrate) {
+      navigator.vibrate([400, 200, 400, 200, 400]);
+      vibrateInterval = setInterval(() => {
+        navigator.vibrate([400, 200, 400, 200, 400]);
+      }, 1400);
+    }
+  }
+
+  function stopBrowserAlarm() {
+    isAlarming = false;
+    silenceBtn.hidden = true;
+
+    if (sirenInterval) {
+      clearInterval(sirenInterval);
+      sirenInterval = null;
+    }
+    if (sirenOsc) {
+      try {
+        sirenOsc.stop();
+      } catch (e) {}
+      sirenOsc.disconnect();
+      sirenOsc = null;
+    }
+    if (sirenGain) {
+      sirenGain.disconnect();
+      sirenGain = null;
+    }
+
+    if (vibrateInterval) {
+      clearInterval(vibrateInterval);
+      vibrateInterval = null;
+    }
+    if (navigator.vibrate) navigator.vibrate(0);
+  }
+
+  // Fires the browser alarm only for alerts that arrive while the
+  // dashboard is already open, and stops it once none are left active.
+  function checkForNewAlerts() {
+    const currentlyActive = allAlerts.filter((a) => a.status === "active");
+
+    if (!sawFirstSnapshot) {
+      // Don't blast the alarm for alerts that already existed on page load.
+      currentlyActive.forEach((a) => seenActiveIds.add(a.id));
+      sawFirstSnapshot = true;
+      return;
+    }
+
+    const hasNewAlert = currentlyActive.some((a) => !seenActiveIds.has(a.id));
+    currentlyActive.forEach((a) => seenActiveIds.add(a.id));
+
+    if (hasNewAlert) {
+      startBrowserAlarm();
+    } else if (currentlyActive.length === 0 && isAlarming) {
+      stopBrowserAlarm();
+    }
+  }
+
   // ---------- auth ----------
   const existingAccount = await UVAuth.init();
   if (existingAccount) {
@@ -65,6 +171,7 @@
   }
 
   signOutBtn.addEventListener("click", async () => {
+    stopBrowserAlarm();
     if (unsubscribe) unsubscribe();
     await UVAuth.signOut();
     location.reload();
@@ -81,6 +188,7 @@
           allAlerts = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
           renderQueue();
           renderStats();
+          checkForNewAlerts();
         },
         (err) => console.error("alerts subscription failed", err)
       );

@@ -6,9 +6,6 @@
     <title>UV-A.L.E.R.T. — Security</title>
     <link rel="stylesheet" href="css/style.css" />
     <link rel="stylesheet" href="css/security.css" />
-    <link rel="manifest" href="manifest.json" />
-    <link rel="icon" href="icons/favicon-32.png" />
-    <meta name="theme-color" content="#0f7a3d" />
   </head>
   <body>
     <!-- ---------- LOGIN ---------- -->
@@ -62,6 +59,21 @@
             <div class="lbl">Resolved today</div>
           </div>
         </div>
+
+        <!-- Shown only while the browser alarm (sound/vibration) is active -->
+        <button
+          id="silenceBtn"
+          class="chip-btn"
+          hidden
+          style="
+            border-color: var(--red);
+            color: var(--red);
+            width: 100%;
+            margin-top: 8px;
+          "
+        >
+          🔇 Silence alarm
+        </button>
 
         <div>
           <div class="section-head">
