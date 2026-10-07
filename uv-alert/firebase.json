@@ -27,11 +27,28 @@
         ]
       },
       {
+        "source": "/firebase-messaging-sw.js",
+        "headers": [
+          { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },
+          { "key": "Service-Worker-Allowed", "value": "/" }
+        ]
+      },
+      {
         "source": "/js/lib/**",
         "headers": [
           { "key": "Cache-Control", "value": "public, max-age=604800, immutable" }
         ]
       }
     ]
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "ignore": ["node_modules", ".git", "firebase-debug.log"]
+    }
+  ],
+  "firestore": {
+    "rules": "firestore.rules"
   }
 }
