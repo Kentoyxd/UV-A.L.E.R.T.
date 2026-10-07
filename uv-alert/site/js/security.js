@@ -3,6 +3,8 @@
 // ============================================================
 
 (async function () {
+  const VAPID_KEY = "YOUR_WEB_PUSH_VAPID_KEY"; // Firebase console → Project settings → Cloud Messaging → Web Push certificates
+
   const loginScreen = document.getElementById("loginScreen");
   const msLoginBtn = document.getElementById("msLoginBtn");
   const loginError = document.getElementById("loginError");
@@ -25,17 +27,23 @@
   const espSend = document.getElementById("espSend");
   const espStatus = document.getElementById("espStatus");
 
+  const enableBtn = document.getElementById("enableAlertsBtn");
+  const pushStatus = document.getElementById("pushStatus");
+
   let currentStaff = null;
   let filter = "open"; // "open" | "all"
   let allAlerts = [];
   let unsubscribe = null;
 
-  // ---------- browser alarm (sound + vibration) ----------
+  // Opened from a push notification tap → start the siren as soon as data loads
+  const openedFromPush = new URLSearchParams(location.search).get("alarm") === "1";
+
+  // ---------- browser alarm (sound + vibration + wake lock) ----------
   let audioCtx = null;
   let sirenOsc = null;
   let sirenGain = null;
-  let sirenInterval = null;
   let vibrateInterval = null;
+  let wakeLock = null;
   let isAlarming = false;
   let sawFirstSnapshot = false;
   const seenActiveIds = new Set();
@@ -52,6 +60,42 @@
     return audioCtx;
   }
 
+  // Any tap/click anywhere unlocks audio, so later alarms are allowed to play.
+  function unlockAudioOnce() {
+    try {
+      ensureAudioContext();
+    } catch (e) {}
+    if (audioCtx && audioCtx.state === "running") {
+      window.removeEventListener("pointerdown", unlockAudioOnce);
+      window.removeEventListener("keydown", unlockAudioOnce);
+    }
+  }
+  window.addEventListener("pointerdown", unlockAudioOnce);
+  window.addEventListener("keydown", unlockAudioOnce);
+
+  async function requestWakeLock() {
+    try {
+      if ("wakeLock" in navigator && !wakeLock) {
+        wakeLock = await navigator.wakeLock.request("screen");
+        wakeLock.addEventListener("release", () => (wakeLock = null));
+      }
+    } catch (e) {}
+  }
+  function releaseWakeLock() {
+    if (wakeLock) {
+      wakeLock.release().catch(() => {});
+      wakeLock = null;
+    }
+  }
+
+  // Wake locks are dropped when the page is hidden; re-acquire when it's back.
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") {
+      if (isAlarming) requestWakeLock();
+      if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
+    }
+  });
+
   function startBrowserAlarm() {
     if (isAlarming) return;
     isAlarming = true;
@@ -60,25 +104,35 @@
     try {
       const ctx = ensureAudioContext();
       sirenGain = ctx.createGain();
-      sirenGain.gain.value = 0.15; // keep it from being painfully loud
+      sirenGain.gain.value = 0.25;
       sirenGain.connect(ctx.destination);
       sirenOsc = ctx.createOscillator();
       sirenOsc.type = "sine";
       sirenOsc.connect(sirenGain);
-      sirenOsc.start();
 
-      // Two-tone wail, alternating every 500ms.
-      let high = true;
-      sirenOsc.frequency.setValueAtTime(880, ctx.currentTime);
-      sirenInterval = setInterval(() => {
-        high = !high;
-        sirenOsc.frequency.setTargetAtTime(high ? 880 : 660, ctx.currentTime, 0.05);
-      }, 500);
+      // Pre-schedule 5 minutes of two-tone wail on the audio clock.
+      // No setInterval, so background-tab timer throttling can't stall it.
+      const t0 = ctx.currentTime;
+      for (let i = 0; i < 600; i++) {
+        sirenOsc.frequency.setValueAtTime(i % 2 ? 660 : 880, t0 + i * 0.5);
+      }
+      sirenOsc.start();
+      sirenOsc.stop(t0 + 300);
+      sirenOsc.onended = () => {
+        if (isAlarming) {
+          // Siren ran its 5 minutes; if alerts are still active, restart it.
+          isAlarming = false;
+          if (allAlerts.some((a) => a.status === "active")) startBrowserAlarm();
+          else stopBrowserAlarm();
+        }
+      };
     } catch (err) {
       console.error("Couldn't start audio alarm:", err);
     }
 
-    // Vibration — Android Chrome/Edge only. No-op (silently) on iOS Safari.
+    requestWakeLock();
+
+    // Vibration — Android Chrome/Edge only. No-op on iOS.
     if (navigator.vibrate) {
       navigator.vibrate([400, 200, 400, 200, 400]);
       vibrateInterval = setInterval(() => {
@@ -91,11 +145,8 @@
     isAlarming = false;
     silenceBtn.hidden = true;
 
-    if (sirenInterval) {
-      clearInterval(sirenInterval);
-      sirenInterval = null;
-    }
     if (sirenOsc) {
+      sirenOsc.onended = null;
       try {
         sirenOsc.stop();
       } catch (e) {}
@@ -112,17 +163,20 @@
       vibrateInterval = null;
     }
     if (navigator.vibrate) navigator.vibrate(0);
+
+    releaseWakeLock();
   }
 
-  // Fires the browser alarm only for alerts that arrive while the
-  // dashboard is already open, and stops it once none are left active.
+  // Fires the browser alarm for alerts that arrive while the dashboard is open
+  // (or when opened from a push notification), and stops it once none are active.
   function checkForNewAlerts() {
     const currentlyActive = allAlerts.filter((a) => a.status === "active");
 
     if (!sawFirstSnapshot) {
-      // Don't blast the alarm for alerts that already existed on page load.
       currentlyActive.forEach((a) => seenActiveIds.add(a.id));
       sawFirstSnapshot = true;
+      // Opened by tapping a push → there's an alert the person came to see.
+      if (openedFromPush && currentlyActive.length) startBrowserAlarm();
       return;
     }
 
@@ -134,6 +188,97 @@
     } else if (currentlyActive.length === 0 && isAlarming) {
       stopBrowserAlarm();
     }
+  }
+
+  // Service worker tells an already-open window to start the siren (notification tap)
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.addEventListener("message", (e) => {
+      if (e.data && e.data.type === "alarm") startBrowserAlarm();
+    });
+  }
+
+  // ---------- push notifications (background alerts) ----------
+  let messagingInstance = null;
+  let onMessageBound = false;
+
+  function pushSupported() {
+    return (
+      "serviceWorker" in navigator &&
+      "Notification" in window &&
+      "PushManager" in window &&
+      firebase.messaging.isSupported()
+    );
+  }
+
+  function setPushUi(text, done) {
+    pushStatus.textContent = text || "";
+    if (done) {
+      enableBtn.textContent = "✅ Background alerts enabled";
+      enableBtn.disabled = true;
+    }
+  }
+
+  async function registerPush() {
+    const reg = await navigator.serviceWorker.register("firebase-messaging-sw.js");
+    await navigator.serviceWorker.ready;
+
+    messagingInstance = firebase.messaging();
+    const token = await messagingInstance.getToken({
+      vapidKey: VAPID_KEY,
+      serviceWorkerRegistration: reg,
+    });
+    if (!token) throw new Error("No FCM token returned");
+
+    await UVAuth.db.collection("staffTokens").doc(token).set(
+      {
+        email: currentStaff.email,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      },
+      { merge: true }
+    );
+    localStorage.setItem("uvalert_push_token", token);
+
+    // Push arriving while the app is open also triggers the siren.
+    if (!onMessageBound) {
+      messagingInstance.onMessage(() => startBrowserAlarm());
+      onMessageBound = true;
+    }
+    setPushUi("", true);
+  }
+
+  async function enableBackgroundAlerts() {
+    ensureAudioContext(); // unlock audio with this tap
+
+    if (!pushSupported()) {
+      setPushUi(
+        "This browser can't receive background alerts. On iPhone, use Share → Add to Home Screen, then open the app from there."
+      );
+      return;
+    }
+
+    const perm = await Notification.requestPermission();
+    if (perm !== "granted") {
+      setPushUi("Notifications are blocked. Allow them in your browser/site settings, then try again.");
+      return;
+    }
+
+    try {
+      await registerPush();
+    } catch (err) {
+      console.error("Push setup failed", err);
+      setPushUi("Couldn't enable background alerts. Please try again.");
+    }
+  }
+  enableBtn.addEventListener("click", enableBackgroundAlerts);
+
+  async function removePushToken() {
+    const token = localStorage.getItem("uvalert_push_token");
+    if (!token) return;
+    try {
+      await UVAuth.db.collection("staffTokens").doc(token).delete();
+      if (messagingInstance) await messagingInstance.deleteToken();
+    } catch (e) {}
+    localStorage.removeItem("uvalert_push_token");
   }
 
   // ---------- auth ----------
@@ -168,13 +313,21 @@
     loginScreen.hidden = true;
     dashScreen.hidden = false;
     subscribeToAlerts();
+
+    // Already allowed on a previous visit → quietly refresh the push token.
+    if (pushSupported() && Notification.permission === "granted") {
+      registerPush().catch((err) => console.error("Push refresh failed", err));
+    } else if (pushSupported() && Notification.permission === "denied") {
+      setPushUi("Notifications are blocked. Allow them in your browser/site settings.");
+    }
   }
 
   signOutBtn.addEventListener("click", async () => {
     stopBrowserAlarm();
     if (unsubscribe) unsubscribe();
+    await removePushToken(); // signed-out devices shouldn't keep getting alerts
     await UVAuth.signOut();
-    location.reload();
+    location.href = "security.html";
   });
 
   // ---------- live queue ----------

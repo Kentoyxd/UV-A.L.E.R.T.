@@ -4,6 +4,15 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>UV-A.L.E.R.T. — Security</title>
+
+    <!-- PWA -->
+    <link rel="manifest" href="manifest-security.json" />
+    <meta name="theme-color" content="#0f7a3d" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="UV Security" />
+    <link rel="apple-touch-icon" href="icons/icon-192.png" />
+
     <link rel="stylesheet" href="css/style.css" />
     <link rel="stylesheet" href="css/security.css" />
   </head>
@@ -59,6 +68,16 @@
             <div class="lbl">Resolved today</div>
           </div>
         </div>
+
+        <!-- Needs a tap: browsers only allow sound + notifications after a user gesture -->
+        <button
+          id="enableAlertsBtn"
+          class="chip-btn"
+          style="width: 100%; margin-top: 8px"
+        >
+          🔔 Enable background alerts
+        </button>
+        <p id="pushStatus" class="hw-note" style="margin: 0"></p>
 
         <!-- Shown only while the browser alarm (sound/vibration) is active -->
         <button
@@ -138,6 +157,7 @@
     <script src="js/lib/firebase-auth-compat.js"></script>
     <script src="js/lib/firebase-firestore-compat.js"></script>
     <script src="js/lib/firebase-database-compat.js"></script>
+    <script src="js/lib/firebase-messaging-compat.js"></script>
     <script src="js/config.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/security.js"></script>
