@@ -3,7 +3,7 @@
 // ============================================================
 
 (async function () {
-  const VAPID_KEY = "YOUR_WEB_PUSH_VAPID_KEY"; // Firebase console → Project settings → Cloud Messaging → Web Push certificates
+  const VAPID_KEY = "BHNwZ5gfFH5Owl6q1qXt72ugbWrDQmjVskV-3KbqRYAVlprcDO2OZrJ9f-Uz3ncFSWmpTC1kCj6h1d-FqTOEKMc"; // Firebase console → Project settings → Cloud Messaging → Web Push certificates
 
   const loginScreen = document.getElementById("loginScreen");
   const msLoginBtn = document.getElementById("msLoginBtn");
